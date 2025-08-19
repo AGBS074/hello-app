@@ -34,7 +34,7 @@ jobs:
       - name: Checkout infra repo
         uses: actions/checkout@v3
         with:
-          repository: <your-username>/infra-repo
+          repository: AGBS074/infra-repo
           path: infra-repo
           token: ${{ secrets.INFRA_REPO_PAT }}
 
