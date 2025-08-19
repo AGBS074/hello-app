@@ -1,16 +1,16 @@
-name: Build and Push Docker Image
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
-      - main   # run only when pushing to main branch
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repo
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -23,8 +23,32 @@ jobs:
 
       # Step 3: Build and push Docker image
       - name: Build and push
+        id: docker_build
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/hello-devops:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/hello-devops:${{ github.sha }}
+
+      # Step 4: Clone infra repo
+      - name: Checkout infra repo
+        uses: actions/checkout@v3
+        with:
+          repository: <your-username>/infra-repo
+          path: infra-repo
+          token: ${{ secrets.INFRA_REPO_PAT }}
+
+      # Step 5: Update deployment.yaml with new image
+      - name: Update image tag
+        run: |
+          sed -i "s#${{ secrets.DOCKER_USERNAME }}/hello-devops:.*#${{ secrets.DOCKER_USERNAME }}/hello-devops:${{ github.sha }}#g" infra-repo/hello-devops/deployment.yaml
+
+      # Step 6: Commit and push changes
+      - name: Commit and push
+        run: |
+          cd infra-repo
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add hello-devops/deployment.yaml
+          git commit -m "Update image to ${{ github.sha }}"
+          git push origin main
