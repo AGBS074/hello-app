@@ -50,6 +50,6 @@ jobs:
           cd infra-repo
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add hello-devops/deployment.yaml
-          git commit -m "Update image to ${{ github.sha }}"
+          git add hello-devops/deployment.yaml || true
+          git diff --cached --quiet || git commit -m "Update image to ${{ github.sha }}"
           git push origin main
